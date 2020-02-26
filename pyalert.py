@@ -26,7 +26,7 @@ def send_message(send_to, subject, message):
 
     """
 
-    email = 'Subject: {}\n\n{}'.format(subject, message)
+    email = 'Subject:  {}\n\n {}'.format(subject, message)
     context = ssl.create_default_context()
     
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
