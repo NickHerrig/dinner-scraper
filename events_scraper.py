@@ -1,4 +1,5 @@
 from collections import namedtuple
+import os
 from pprint import pprint
 import sys
 
@@ -17,13 +18,15 @@ def parse_events(page_content):
         if link.string == 'Tickets + Menu':
             event_links.append(link['href'])
     Event = namedtuple('Event', 'name link')
-    events = []
-    for name, link in zip(event_names, page_links):
-       events.append(Event(name.string, link)) 
-    return events
-    
+    for name, link in zip(event_names, event_links):
+       yield Event(name.string, link) 
+
+def craft_message(event):
+    return 'Name: {event} \n link: {link}'.format(event=event.name, link=event.link) 
 
 url = 'https://ohospitality.com/events/'
+alert_subject = 'New Event!'
+reciever = password = os.environ['NICK_PERSONAL_EMAIL']
 
 try:
     response = requests.get(url, timeout=5)
@@ -34,13 +37,6 @@ except requests.exceptions.ConnectionError as error:
 if response.status_code != 200:
     raise SystemExit('Non 200 recieved from url endpoint. Status code: ', response.status_code)
 elif response.status_code == 200:
-    events = parse_events(response.content)
+    for event in parse_events(response.content):
+        send_message(reciever, alert_subject, craft_message(event)) 
 
-for event in events:
-    print(event)
-
-#for event, link in zip(events, purchase_links):
-#    alert_subject = 'New Event!'
-#    alert_body ='Event Name: {event} \n Purchase Tickets Here: {link}'.format(event=event.string, link=link) 
-##TODO    reciever = Replace with os env variable
-#    send_message(reciever, alert_subject, alert_body)
