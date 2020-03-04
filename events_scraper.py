@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import shelve
 import sys
 
 from bs4 import BeautifulSoup
@@ -7,11 +8,9 @@ import requests
 
 from pyalert import send_message
 
-
 url = 'https://ohospitality.com/events/'
 alert_subject = 'New Event!'
 reciever = password = os.environ['NICK_PERSONAL_PHONE']
-
 
 def parse_events(page_content):
     html = BeautifulSoup(page_content, 'html.parser')    
@@ -38,9 +37,16 @@ def main():
     if response.status_code != 200:
         raise SystemExit('Non 200 recieved from url endpoint. Status code: ', response.status_code)
     elif response.status_code == 200:
-        for event in parse_events(response.content):
-            send_message(reciever, alert_subject, craft_message(evnt)) 
-            # TODO Check DB, if not present, send message, add to db
+        with shelve.open('db') as db:
+            for event in parse_events(response.content):
+                event_exists = event.link in db
+                print(event_exists)
+                if not event_exists:
+                    send_message(reciever, alert_subject, craft_message(event)) 
+                    db[event.link] = event.link
+                    #TODO: Logg a successful message about new event
+
 
 if __name__ == '__main__':
     main()
+    #TODO: Writing some unit tests.
