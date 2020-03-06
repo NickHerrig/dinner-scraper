@@ -11,6 +11,7 @@ from pyalert import send_message
 url = 'https://ohospitality.com/events/'
 alert_subject = 'New Event!'
 reciever = password = os.environ['NICK_PERSONAL_PHONE']
+Event = namedtuple('Event', 'name date link')
 
 def parse_events(page_content):
     html = BeautifulSoup(page_content, 'html.parser')    
@@ -20,9 +21,8 @@ def parse_events(page_content):
     for link in page_links:
         if link.string == 'Tickets + Menu':
             event_links.append(link['href'])
-    Event = namedtuple('Event', 'name link')
     for name, link in zip(event_names, event_links):
-       yield Event(name.string, link) 
+       yield Event(name.string, None,  link) 
 
 def craft_message(event):
     return 'Name: {event} \n link: {link}'.format(event=event.name, link=event.link) 
@@ -49,4 +49,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    #TODO: Writing some unit tests.
+    #TODO: Write unit tests for each function?
